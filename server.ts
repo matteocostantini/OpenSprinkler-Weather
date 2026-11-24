@@ -8,6 +8,7 @@ import * as weather from "./routes/weather";
 import * as local from "./routes/weatherProviders/local";
 import * as baselineETo from "./routes/baselineETo";
 import * as packageJson from "./package.json";
+import { startMqttPws } from "./routes/weatherProviders/mqttPws";
 
 let	host	= process.env.HOST || "127.0.0.1",
 	port	= parseInt( process.env.PORT ) || 3000;
@@ -28,6 +29,8 @@ app.get( /weatherData/, cors(), weather.getWeatherData );
 // Endpoint to stream Weather Underground data from local PWS
 if ( pws === "WU" ) {
 	app.get( "/weatherstation/updateweatherstation.php", local.captureWUStream );
+} else if ( pws === "MQTT" ) {
+	startMqttPws();
 }
 
 app.get( "/", function( req, res ) {

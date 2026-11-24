@@ -11,28 +11,57 @@ var queue: Array<Observation> = [],
 	lastRainEpoch = 0,
 	lastRainCount: number;
 
+export interface LocalObservation {
+	timestamp: number;
+	temp: number;
+	humidity: number;
+	windSpeed?: number;
+	solarRadiation?: number;
+	precip: number;
+	raining: boolean;
+}
+
 function getMeasurement(req: express.Request, key: string): number {
 	let value: number;
 
 	return ( key in req.query ) && !isNaN( value = parseFloat( req.query[key] ) ) && ( value !== -9999.0 ) ? value : undefined;
 }
 
+export function addObservation( observation: LocalObservation ) {
+	const obs: Observation = {
+		timestamp: observation.timestamp,
+		temp: observation.temp,
+		humidity: observation.humidity,
+		windSpeed: observation.windSpeed,
+		solarRadiation: observation.solarRadiation,
+		precip: observation.precip
+	};
+
+	if ( observation.raining ) {
+		lastRainEpoch = obs.timestamp;
+	}
+
+	queue.unshift( obs );
+}
+
+export function hasObservations(): boolean {
+	return queue.length > 0;
+}
+
 export const captureWUStream = async function( req: express.Request, res: express.Response ) {
 	let rainCount = getMeasurement(req, "dailyrainin");
 
-	const obs: Observation = {
+	addObservation( {
 		timestamp: req.query.dateutc === "now" ? moment().unix() : moment( req.query.dateutc + "Z" ).unix(),
 		temp: getMeasurement(req, "tempf"),
 		humidity: getMeasurement(req, "humidity"),
 		windSpeed: getMeasurement(req, "windspeedmph"),
 		solarRadiation: getMeasurement(req, "solarradiation") * 24 / 1000,	// Convert to kWh/m^2 per day
 		precip: rainCount < lastRainCount ? rainCount : rainCount - lastRainCount,
-	};
+		raining: getMeasurement(req, "rainin") > 0
+	} );
 
-	lastRainEpoch = getMeasurement(req, "rainin") > 0 ? obs.timestamp : lastRainEpoch;
 	lastRainCount = isNaN(rainCount) ? lastRainCount : rainCount;
-
-	queue.unshift(obs);
 
 	res.send( "success\n" );
 };

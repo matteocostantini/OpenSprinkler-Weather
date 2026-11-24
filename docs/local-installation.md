@@ -72,6 +72,21 @@ WEATHER_PROVIDER=local
 PWS=WU
 ```
 
+If the PWS publishes Netatmo observations through MQTT, use:
+```
+WEATHER_PROVIDER=local
+PWS=MQTT
+LOCAL_PERSISTENCE=1
+MQTT_URL=mqtt://<BROKER HOST>:1883
+MQTT_USERNAME=<MQTT USERNAME>
+MQTT_PASSWORD=<MQTT PASSWORD>
+MQTT_WEATHER_TOPIC=<NETATMO OUTDOOR MODULE TOPIC>
+MQTT_RAIN_TOPIC=<NETATMO RAIN MODULE TOPIC>
+```
+
+The MQTT outdoor module payload must provide `dashboard_data.time_utc`, `Temperature` (Celsius), and `Humidity`.
+The rain module payload must provide `dashboard_data.time_utc`, `Rain`, and `sum_rain_24` (millimeters).
+
 * **Step 5d:** If you registered for the Apple WeatherKit API then also add these two lines to the .env file:
 ```
 WEATHER_PROVIDER=Apple
@@ -130,4 +145,3 @@ This will return a response similar to below with the `scale` value equating to 
 **Step 8:** You will now need to configure your OpenSprinkler device to use the local version of the Weather Service rather than the Cloud version. On a web browser, go to `http://<your OS IP>:80/su` if you have an OS device or `http://<your OSPi IP>:8080/su` for OSPi/OSBo devices to set the Weather Service IP and PORT number.
 
 OpenSprinkler should now be connected to your local Weather Service for calculating rain delay and watering levels.
-
